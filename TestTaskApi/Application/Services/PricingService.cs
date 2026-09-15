@@ -37,7 +37,7 @@ namespace TestTaskApi.Application.Services
                     return cursor.Date.AddHours(boundary);
             }
 
-            // Ничего не нашли на сегодня — граница в полночь следующего дня
+            // Ничего не нашли на сегодня - граница в полночь следующего дня
             return cursor.Date.AddDays(1);
         }
 

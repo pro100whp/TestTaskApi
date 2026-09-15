@@ -29,18 +29,18 @@ namespace TestTaskApi.Application.Services
 
         public async Task<BookingDto?> CreateBookingAsync(CreateBookingDto dto)
         {
-            var room = await _context.Rooms
-                .Include(r => r.Bookings)
-                .FirstOrDefaultAsync(r => r.Id == dto.RoomId);
+            var room = await _context.Rooms.FindAsync(dto.RoomId);
 
             if (room is null)
                 return null; // Контроллер вернёт 404
 
-            var isOccupied = room.Bookings.Any(b =>
-                b.StartDate < dto.EndDate && b.EndDate > dto.StartDate);
+            var isOccupied = await _context.Bookings.AnyAsync(b =>
+                b.RoomId == dto.RoomId &&
+                b.StartDate < dto.EndDate &&
+                b.EndDate > dto.StartDate);
 
             if (isOccupied)
-                throw new InvalidOperationException("Зал уже занят на выбранный интервал времени.");
+                throw new InvalidOperationException("Зал вже зайнятий.");
 
             var utilities = await _context.Utilities
                 .Where(u => dto.UtilityIds.Contains(u.Id))
