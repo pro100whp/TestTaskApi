@@ -29,6 +29,12 @@ namespace TestTaskApi.Application.Services
                 .Where(u => createRoomDto.UtilityIds.Contains(u.Id))
                 .ToListAsync();
 
+            if (utilities.Count != createRoomDto.UtilityIds.Count)
+            {
+                throw new InvalidOperationException(
+                    "Одна или несколько выбранных услуг не существуют.");
+            }
+
             var room = new Room
             {
                 Name = createRoomDto.Name,

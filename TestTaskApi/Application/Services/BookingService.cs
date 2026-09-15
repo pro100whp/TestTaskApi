@@ -29,7 +29,9 @@ namespace TestTaskApi.Application.Services
 
         public async Task<BookingDto?> CreateBookingAsync(CreateBookingDto dto)
         {
-            var room = await _context.Rooms.FindAsync(dto.RoomId);
+            var room = await _context.Rooms
+                .Include(r => r.Utilities)
+                .FirstOrDefaultAsync(r => r.Id == dto.RoomId);
 
             if (room is null)
                 return null; // Контроллер вернёт 404
@@ -46,7 +48,31 @@ namespace TestTaskApi.Application.Services
                 .Where(u => dto.UtilityIds.Contains(u.Id))
                 .ToListAsync();
 
-            var roomCost = _pricingService.CalculateRoomCost(dto.StartDate, dto.EndDate, room.BasePricePerHour);
+            if (utilities.Count != dto.UtilityIds.Count)
+            {
+                throw new InvalidOperationException(
+                    "Одна або кілька выбранних послуг не існує.");
+            }
+
+            var roomUtilityIds = room.Utilities
+                .Select(u => u.Id)
+                .ToHashSet();
+
+            var invalidUtilityIds = dto.UtilityIds
+                .Where(id => !roomUtilityIds.Contains(id))
+                .ToList();
+
+            if (invalidUtilityIds.Any())
+            {
+                throw new InvalidOperationException(
+                    "Одна або кілька выбранних послуг недоступні для цього залу.");
+            }
+
+            var roomCost = _pricingService.CalculateRoomCost(
+                dto.StartDate,
+                dto.EndDate,
+                room.BasePricePerHour);
+
             var utilitiesCost = utilities.Sum(u => u.BasePrice);
 
             var booking = new Booking
@@ -62,6 +88,7 @@ namespace TestTaskApi.Application.Services
             await _context.SaveChangesAsync();
 
             booking.Room = room;
+
             return MapToDto(booking);
         }
 

@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TestTaskApi.Application.DTOs;
 using TestTaskApi.Application.Services;
 using TestTaskApi.Application.Services.Interfaces;
 
 namespace TestTaskApi.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ReportsController : ControllerBase
